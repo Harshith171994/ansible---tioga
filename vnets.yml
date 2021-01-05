@@ -1,0 +1,57 @@
+#SC7-2-Compliant: This playbook creates an Azure server with an nsg attached to allow RDP and HTTP traffic inbound rules
+# Resource group
+resource_group: sc7-2-resourcegroup
+location: centralus
+# Virtual network
+virtual_net: sc7-2-vnet
+vnet_address_prefixes: 99.2.0.0/16
+# Subnet
+subnet: server1-subnet
+subnet_address_prefix: 99.2.1.0/24
+# Public ip assignment
+resource_group: sc7-2-resourcegroup
+allocation_method: Static
+name: PublicIP
+register: output_ip_address
+name: Output public IP
+    debug:
+    msg: "The public IP is {{ output_ip_address.state.ip_address }}"
+# Network security group
+network_security_group: Server1-nsg
+nsg_rules:
+        - name: 'Allow_RDP'
+        protocol: Tcp
+        destination_port_range: 3389
+        access: Allow
+        priority: 100
+        direction: Inbound
+        - name: 'Allow_HTTP_traffic'
+        protocol: Tcp
+        destination_port_range:
+            - 80
+            - 443
+        access: Allow
+        priority: 200
+        direction: Inbound
+# Network interface
+network_interface: web-NIC
+resource_group: sc7-2-resourcegroup
+virtual_net: sc7-2-vnet
+subnet: server1-subnet
+network_security_group: Server1-nsg
+ip_configurations:
+     - name: default
+       public_ip_address_name: webPublicIP
+       primary: True
+# Virtual machine
+virtual_machine: WebServer-vm
+vm_size: Standard_B1ls
+vm_username: sample
+vm_password: userpassword@21
+vm_managed_disk_type: Standard_LRS
+os_type: Windows
+vm_image:
+  offer: WindowsServer
+  publisher: MicrosoftWindowsServer
+  sku: 2016-Datacenter
+  version: latest
